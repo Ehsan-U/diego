@@ -84,7 +84,6 @@ class FanGraph:
         datas.append((last_7_item, "Last 7"))
         for data, sheet in datas:
             self.exporter.export(data, sheet)
-        logger.info(f"Crawled {self.spider}\n")
 
 
 

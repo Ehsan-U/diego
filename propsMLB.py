@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import re
+import shutil
 from parsel import Selector
 from playwright.sync_api import sync_playwright, Route, Frame
 from twocaptcha import TwoCaptcha
@@ -20,6 +21,7 @@ logging.basicConfig(level=logging.WARNING,
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+_date = input("Date: ") # 2024-05-24
 
 
 class WebDriver:
@@ -119,18 +121,18 @@ class WebDriver:
                 logger.debug(f"Error while closing playwright")
 
 
-
 class FeedExporter:
 
     def __init__(self, filename: str = "workbook.xlsx"):
-        self.writer = pd.ExcelWriter(filename, engine="openpyxl")
+        mode = 'w' if not os.path.exists(filename) else 'a'
+        self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode) 
 
     def export(self, data: List[Dict], sheet: str):
         if not data:
             logger.info("No data available")
             return
         try:
-            df = pd.DataFrame(data)
+            df = self.to_numbers(pd.DataFrame(data))
             df.to_excel(self.writer, sheet_name=sheet, index=False)
         except Exception as e:
             logger.error(e)
@@ -138,13 +140,20 @@ class FeedExporter:
         else:
             logger.debug(f"Data written to {sheet}")
 
+    def to_numbers(self, df: pd.DataFrame):
+        for col in df.columns:
+            try:
+                df[col] = df[col].astype(float)
+            except Exception:
+                pass
+        return df
+
     def close(self):
         try:
             self.writer.close()
         except IndexError as e:
             logger.error(e)
             logger.debug("No sheet to write")
-
 
 
 def is_exist(response, e):
@@ -159,9 +168,9 @@ def is_exist(response, e):
 class FanGraph:
     lhh_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=pit&type=0&month=13&pageitems=2000000000&sortcol=2&sortdir=default&pagenum=1"
     rhh_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=pit&pageitems=2000000000&sortcol=2&sortdir=default&type=0&month=14"
-    lhp_url = "https://www.fangraphs.com/leaders/major-league?lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=bat&pageitems=2000000000&pos=np&type=0&month=13"
-    rhp_url = "https://www.fangraphs.com/leaders/major-league?lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=bat&pageitems=2000000000&pos=np&type=0&month=14"
-    last_7_url = 'https://www.fangraphs.com/leaders/major-league?lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=bat&pageitems=2000000000&pos=np&type=0&month=1'
+    lhp_url = "https://www.fangraphs.com/leaders/major-league?lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=bat&pageitems=2000000000&pos=np&type=8&month=13"
+    rhp_url = "https://www.fangraphs.com/leaders/major-league?lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=bat&pageitems=2000000000&pos=np&type=8&month=14"
+    last_7_url = 'https://www.fangraphs.com/leaders/major-league?lg=all&qual=0&season=2024&season1=2024&ind=0&rost=0&filter=&players=0&team=0&stats=bat&pageitems=2000000000&pos=np&type=8&month=1'
 
 
     def __init__(self, driver: WebDriver, exporter: FeedExporter):
@@ -410,15 +419,15 @@ class Paydirt:
             self.driver.wait_for_selector(iframe=iframe, selector="//p[contains(text(), 'Export Team Model')]/ancestor::button")
             with self.driver.page.expect_download() as download_file:
                 iframe.click("//p[contains(text(), 'Export Team Model')]/ancestor::button")
-            iframe.wait_for_timeout(5000)
-            download_file.value.save_as("paydirt.csv")
+            filepath = download_file.value.path()
+            shutil.copy(filepath, "paydirt.csv")
             df = pd.read_csv("paydirt.csv")
             os.remove("paydirt.csv")
             return df.to_dict(orient="records")
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while {self.get_paydirt.__name__} [{self.spider}]")
-
+            
     
     def crawl(self):
         datas = []
@@ -605,7 +614,7 @@ class EvAnalystics:
 
 
 driver = WebDriver(timeout=60*1000, headless=True)
-exporter = FeedExporter()
+exporter = FeedExporter(filename="workbook.xlsx")
 
 spiders = [
     FanGraph(driver, exporter),

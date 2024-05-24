@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 import re
 from parsel import Selector
 from playwright.sync_api import sync_playwright, Route, Frame
@@ -115,7 +116,8 @@ class WebDriver:
 class FeedExporter:
 
     def __init__(self, filename: str = "workbook.xlsx"):
-        self.writer = pd.ExcelWriter(filename, engine="openpyxl")
+        mode = 'w' if not os.path.exists(filename) else 'a'
+        self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode) 
 
     def export(self, data: List[Dict], sheet: str):
         if not data:

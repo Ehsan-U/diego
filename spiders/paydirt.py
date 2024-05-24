@@ -1,4 +1,5 @@
 import os
+import shutil
 import pandas as pd
 from common import logger, WebDriver, is_exist, FeedExporter
 
@@ -45,11 +46,11 @@ class Paydirt:
             self.driver.wait_for_selector(iframe=iframe, selector="//p[contains(text(), 'Export Team Model')]/ancestor::button")
             with self.driver.page.expect_download() as download_file:
                 iframe.click("//p[contains(text(), 'Export Team Model')]/ancestor::button")
-            iframe.wait_for_timeout(5000)
-            download_file.value.save_as("paydirt.csv")
+            filepath = download_file.value.path()
+            shutil.copy(filepath, "paydirt.csv")
             df = pd.read_csv("paydirt.csv")
             os.remove("paydirt.csv")
-            return df.to_dict(orient="records", index=False)
+            return df.to_dict(orient="records")
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while {self.get_paydirt.__name__} [{self.spider}]")

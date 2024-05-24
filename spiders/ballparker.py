@@ -3,6 +3,7 @@ import pandas as pd
 from parsel import Selector
 from common import logger, WebDriver, FeedExporter
 
+_date = input("Date: ") # 2024-05-24
 
 
 class BallParker:
