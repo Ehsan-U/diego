@@ -3,6 +3,7 @@ import io
 import os
 import re
 import shutil
+import time
 from parsel import Selector
 from playwright.sync_api import sync_playwright, Route, Frame
 from twocaptcha import TwoCaptcha
@@ -125,7 +126,7 @@ class FeedExporter:
 
     def __init__(self, filename: str = "workbook.xlsx"):
         mode = 'w' if not os.path.exists(filename) else 'a'
-        self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode) 
+        self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode, if_sheet_exists="replace")  if mode == "a" else pd.ExcelWriter(filename, engine="openpyxl", mode=mode)
 
     def export(self, data: List[Dict], sheet: str):
         if not data:
