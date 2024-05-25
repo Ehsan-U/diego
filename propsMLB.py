@@ -124,7 +124,7 @@ class WebDriver:
 
 class FeedExporter:
 
-    def __init__(self, filename: str = "workbook.xlsx"):
+    def __init__(self, filename: str):
         mode = 'w' if not os.path.exists(filename) else 'a'
         self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode, if_sheet_exists="replace")  if mode == "a" else pd.ExcelWriter(filename, engine="openpyxl", mode=mode)
 
