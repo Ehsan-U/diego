@@ -3,7 +3,7 @@ import io
 import os
 import re
 import shutil
-import time
+import requests
 from parsel import Selector
 from playwright.sync_api import sync_playwright, Route, Frame
 from twocaptcha import TwoCaptcha
@@ -424,8 +424,9 @@ class Paydirt:
             self.driver.click(iframe=iframe, selector="//div[@data-baseweb='tab-list']/button[3]", wait_after=5*1000)
             with self.driver.page.expect_download() as download_file:
                 iframe.locator("//p[contains(text(), 'Export Prop Model')]/ancestor::button").last.click()
-            filepath = download_file.value.path()
-            shutil.copy(filepath, "paydirt.csv")
+            response = requests.get(url=download_file.value.url)
+            with open("paydirt.csv", "wb") as f:
+                f.write(response.content)
             df = pd.read_csv("paydirt.csv")
             os.remove("paydirt.csv")
             return df.to_dict(orient="records")
