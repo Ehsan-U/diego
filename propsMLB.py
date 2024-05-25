@@ -28,7 +28,7 @@ _date = input("Date: ") # 2024-05-24
 class WebDriver:
     """ Common usage of playwright"""
     ad_domains = ["googlesyndication.com", "googletagmanager.com"]
-    solver = TwoCaptcha('ab7f903d21bf75ea49dc155c5bf34fda')
+    solver = TwoCaptcha('a')
 
 
     def __init__(self, headless: bool = True, user_data_dir: str = "./program-data", timeout: int = 30000, channel: str = None):
