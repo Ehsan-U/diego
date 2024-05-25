@@ -57,10 +57,13 @@ class WebDriver:
         route.abort()
 
 
-    def click(self, selector: str, timeout: int = None, wait_after: int = None):
+    def click(self, selector: str, timeout: int = None, wait_after: int = None, iframe: Frame = None):
         try:
             timeout = self.timeout if timeout is None else timeout
-            self.page.click(selector, timeout=timeout)
+            if iframe is None:
+                self.page.click(selector, timeout=timeout)
+            else:
+                iframe.click(selector=selector, timeout=timeout)
             if wait_after is not None:
                 self.page.wait_for_timeout(wait_after)
         except Exception as e:
@@ -417,9 +420,10 @@ class Paydirt:
         self.driver.get_page(self.url, wait_selector="//iframe")
         try:
             iframe = self.driver.page.frames[1]
-            self.driver.wait_for_selector(iframe=iframe, selector="//p[contains(text(), 'Export Team Model')]/ancestor::button")
+            self.driver.wait_for_selector(iframe=iframe, selector="//p[contains(text(), 'Export')]/ancestor::button")
+            self.driver.click(iframe=iframe, selector="//div[@data-baseweb='tab-list']/button[3]", wait_after=5*1000)
             with self.driver.page.expect_download() as download_file:
-                iframe.click("//p[contains(text(), 'Export Team Model')]/ancestor::button")
+                iframe.locator("//p[contains(text(), 'Export Prop Model')]/ancestor::button").last.click()
             filepath = download_file.value.path()
             shutil.copy(filepath, "paydirt.csv")
             df = pd.read_csv("paydirt.csv")
