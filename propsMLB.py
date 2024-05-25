@@ -567,21 +567,22 @@ class EvAnalystics:
             return False
     
 
-    def parse_hits(self, response: str):
+    def parse_hits(self, responses: list[str]):
         items = []
-        if not response:
+        if not responses:
             return items
         try:
-            selector = Selector(response)
-            headers = [" ".join(th.xpath("./text()").getall()) for th in selector.xpath("//table[@id='dataTable']/thead/tr/th")]
-            for row in selector.xpath("//table[@id='dataTable']/tbody/tr"):
-                cells = [t.xpath("./text()").get("") for t in row.xpath("./td")]
-                item = {}
-                for header, val in zip(headers, cells):
-                    if header in item:
-                        header += "_2"
-                    item[header] = val
-                items.append(item)
+            for response in responses:
+                selector = Selector(response)
+                headers = [" ".join(th.xpath("./text()").getall()) for th in selector.xpath("//table[@id='dataTable']/thead/tr/th")]
+                for row in selector.xpath("//table[@id='dataTable']/tbody/tr"):
+                    cells = [t.xpath("./text()").get("") for t in row.xpath("./td")]
+                    item = {}
+                    for header, val in zip(headers, cells):
+                        if header in item:
+                            header += "_2"
+                        item[header] = val
+                    items.append(item)
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while {self.parse_hits.__name__} [{self.spider}]")
@@ -591,14 +592,20 @@ class EvAnalystics:
 
     def get_hits(self):
         try:
-            self.driver.get_page(self.hits_url, wait_selector="//button[@data-val='DRAFTKINGS']")
-            self.driver.click("//button[@data-val='DRAFTKINGS' and @class='group-button']", wait_after=5*1000)
+            self.driver.get_page(self.hits_url, wait_selector="//button[@data-val='BOVADA']")
+            self.driver.click("//button[@data-val='BOVADA' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='H' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='R' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='RBI' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//div[contains(text(), 'MARKET')]/button[@data-val='TB' and @class='group-button']", wait_after=5*1000)
-            response = self.driver.page.content()
-            return self.parse_hits(response)
+            responses = [self.driver.page.content()]
+            start_page = 1
+            end_page = int(re.findall("\d", self.driver.page.locator("//span", has_text="Total records").inner_text().split("(")[0])[-1])
+            while start_page < end_page:
+                start_page +=1
+                self.driver.click("//button[@id='nextButton']", wait_after=2*1000)
+                responses.append(self.driver.page.content())
+            return self.parse_hits(responses)
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while {self.get_hits.__name__} [{self.spider}]")
@@ -618,7 +625,7 @@ class EvAnalystics:
 
 
 
-driver = WebDriver(timeout=60*1000, headless=True)
+driver = WebDriver(timeout=30*1000, headless=True)
 exporter = FeedExporter(filename="workbook.xlsx")
 
 spiders = [
