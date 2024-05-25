@@ -598,6 +598,7 @@ class EvAnalystics:
             self.driver.click("//button[@data-val='R' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='RBI' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//div[contains(text(), 'MARKET')]/button[@data-val='TB' and @class='group-button']", wait_after=5*1000)
+            self.driver.click("//div[contains(text(), 'TEAM')]/button[@data-val='*ALL' and @class='group-button']", wait_after=5*1000)
             responses = [self.driver.page.content()]
             start_page = 1
             end_page = int(re.findall("\d", self.driver.page.locator("//span", has_text="Total records").inner_text().split("(")[0])[-1])
