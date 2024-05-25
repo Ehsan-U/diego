@@ -33,7 +33,7 @@ class WebDriver:
 
     def __init__(self, headless: bool = True, user_data_dir: str = "./program-data", timeout: int = 30000, channel: str = None):
         self.play = sync_playwright().start()
-        self.browser = self.play.chromium.launch_persistent_context(headless=headless, user_data_dir=user_data_dir, channel=channel)
+        self.browser = self.play.chromium.launch_persistent_context(headless=headless, user_data_dir=user_data_dir, channel=channel, ignore_https_errors=True)
         self.page = self.browser.pages[0]
         self.page.route("**/*", lambda route: route.abort() if any([domain for domain in self.ad_domains if domain in route.request.url]) else route.continue_())
         self.timeout = timeout
@@ -592,7 +592,7 @@ class EvAnalystics:
             self.driver.click("//button[@data-val='H' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='R' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='RBI' and @class='group-button']", wait_after=5*1000)
-            self.driver.click("//button[@data-val='TB' and @class='group-button']", wait_after=5*1000)
+            self.driver.click("//div[contains(text(), 'MARKET')]/button[@data-val='TB' and @class='group-button']", wait_after=5*1000)
             response = self.driver.page.content()
             return self.parse_hits(response)
         except Exception as e:
@@ -624,9 +624,10 @@ spiders = [
     PropsCash(driver, exporter),
     EvAnalystics(driver, exporter)
 ]
-
-for spider in spiders:
-    spider.crawl()
-
+try:
+    for spider in spiders:
+        spider.crawl()
+except (Exception, KeyboardInterrupt):
+    pass
 driver.close()
 exporter.close()
