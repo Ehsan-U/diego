@@ -593,8 +593,8 @@ class EvAnalystics:
 
     def get_hits(self):
         try:
-            self.driver.get_page(self.hits_url, wait_selector="//button[@data-val='BOVADA']")
-            self.driver.click("//button[@data-val='BOVADA' and @class='group-button']", wait_after=5*1000)
+            self.driver.get_page(self.hits_url, wait_selector="//button[@data-val='BetMGM']")
+            self.driver.click("//button[@data-val='BetMGM' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='H' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='R' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='RBI' and @class='group-button']", wait_after=5*1000)
@@ -628,14 +628,14 @@ class EvAnalystics:
 
 
 driver = WebDriver(timeout=30*1000, headless=True)
-exporter = FeedExporter(filename="workbook.xlsx")
+exporter = FeedExporter(filename="/home/mint/Documents/props_MLB.xlsx")
 
 spiders = [
     FanGraph(driver, exporter),
-    BallParker(driver, exporter),
-    Paydirt(driver, exporter),
-    PropsCash(driver, exporter),
-    EvAnalystics(driver, exporter)
+    # BallParker(driver, exporter),
+    # Paydirt(driver, exporter),
+    # PropsCash(driver, exporter),
+    # EvAnalystics(driver, exporter)
 ]
 try:
     for spider in spiders:
