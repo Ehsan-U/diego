@@ -373,7 +373,7 @@ class BallParker:
             hits = self.get_hits()
             total_bases = self.get_total_bases()
             datas.append((matchups, "BPMatchups"))
-            datas.append((pitchers, "BPpitchers"))
+            datas.append((pitchers, "BPPitchers"))
             datas.append((hits, "BPHits"))
             datas.append((total_bases, "BPTB"))
             for data, sheet in datas:
@@ -628,14 +628,14 @@ class EvAnalystics:
 
 
 driver = WebDriver(timeout=30*1000, headless=True)
-exporter = FeedExporter(filename="/home/mint/Documents/props_MLB.xlsx")
+exporter = FeedExporter(filename="props_MLB.xlsx")
 
 spiders = [
     FanGraph(driver, exporter),
-    # BallParker(driver, exporter),
-    # Paydirt(driver, exporter),
-    # PropsCash(driver, exporter),
-    # EvAnalystics(driver, exporter)
+    BallParker(driver, exporter),
+    Paydirt(driver, exporter),
+    PropsCash(driver, exporter),
+    EvAnalystics(driver, exporter)
 ]
 try:
     for spider in spiders:
