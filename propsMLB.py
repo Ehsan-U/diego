@@ -593,7 +593,8 @@ class EvAnalystics:
 
     def get_hits(self):
         try:
-            self.driver.get_page(self.hits_url, wait_selector="//button[@data-val='BetMGM']")
+            self.driver.get_page(self.hits_url, wait_selector="//div[contains(text(), 'SPORTS')]/button[@data-val='*ALL']")
+            self.driver.click("//div[contains(text(), 'SPORTS')]/button[@data-val='*ALL' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='BetMGM' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='H' and @class='group-button']", wait_after=5*1000)
             self.driver.click("//button[@data-val='R' and @class='group-button']", wait_after=5*1000)
