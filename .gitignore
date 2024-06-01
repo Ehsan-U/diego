@@ -5,3 +5,4 @@ __pycache__/
 program-data/
 docker-compose.yml
 readme.txt
+creds.json
