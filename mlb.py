@@ -155,7 +155,7 @@ class FeedExporter:
 
     def export(self, data: List[Dict], sheet: str):
         if not data:
-            logger.info("No data available")
+            logger.info(f"No data available {sheet}")
             return
         try:
             df = self.to_numbers(pd.DataFrame(data))
@@ -883,8 +883,15 @@ class Dimers:
 
 
 class FanGraph:
-    bullpen_url = "https://www.fangraphs.com/leaders/major-league?pos=all&stats=rel&lg=all&qual=0&season=2024&season1=2024&ind=0&team=0%2Cts&rost=0&filter=&players=0&type=8&month=3"
-    batting_url = "https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=0&season=2024&season1=2024&ind=0&team=0%2Cts&rost=0&filter=&players=0&type=8&month=3"
+    bullpen_url = "https://www.fangraphs.com/leaders/major-league?pos=all&stats=rel&lg=all&qual=0&season=2024&season1=2024&ind=0&team=0%2Cts&rost=0&filter=&players=0&type=8&month=3&pageitems=2000000000"
+    batting_url = "https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=0&season=2024&season1=2024&ind=0&team=0%2Cts&rost=0&filter=&players=0&type=8&month=3&pageitems=2000000000"
+    stuff_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&team=0&stats=sta&qual=0&sortcol=12&sortdir=default&type=36&month=0&pagenum=1&pageitems=2000000000"
+    pitchers_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&team=0&stats=sta&type=8&month=3&qual=0&pageitems=2000000000"
+    rp_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&type=8&month=3&qual=0&stats=rel&team=0%2Cts&pageitems=2000000000"
+    bat_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&type=8&qual=0&stats=bat&team=0%2Cts&month=3&pageitems=2000000000"
+    lhp_url = 'https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=y&season=2024&season1=2024&ind=0&team=0%2Cts&type=8&month=13&pageitems=2000000000'
+    rhp_url = "https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=y&season=2024&season1=2024&ind=0&team=0%2Cts&type=8&month=14&pageitems=2000000000"
+    records_url = "https://www.fangraphs.com/depthcharts.aspx?position=BaseRuns&pageitems=2000000000"
 
 
     def __init__(self, driver: WebDriver, exporter: FeedExporter) -> None:
@@ -893,32 +900,37 @@ class FanGraph:
         self.spider = self.__class__.__name__
 
 
+    def get_data(self, url):
+        _items = []
+        response = self.driver.get_page(url, wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table", wait_after=10*1000)
+        sel = Selector(response)
+        if sel.xpath("//button[@aria-label='close']"):
+            self.driver.click("//button[@aria-label='close']", wait_after=1*1000)
+        response = self.driver.page.content()
+        sel = Selector(response)
+        table = sel.xpath("//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table")
+        for row in table.xpath("./tbody/tr"):
+            item = {}
+            for td in row.xpath("./td"):
+                if td.xpath("./a/text()").get():
+                    header = td.xpath('./@data-stat').get()
+                    if header in item:
+                        header += "_2"
+                    item[header] = td.xpath("./a/text()").get('').strip()
+                else:
+                    header = td.xpath('./@data-stat').get()
+                    if header in item:
+                        header += "_2"
+                    item[header] = td.xpath("./text()").get('').strip()
+            _items.append(item)
+        return _items
+
+
     def get_bullpen(self):
         items = []
         try:
-            self.driver.get_page(self.bullpen_url, wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table")
-            self.driver.page.wait_for_timeout(10*1000)
-            response = self.driver.page.content()
-            sel = Selector(response)
-            if sel.xpath("//button[@aria-label='close']"):
-                self.driver.click("//button[@aria-label='close']", wait_after=1*1000)
-            response = self.driver.page.content()
-            sel = Selector(response)
-            table = sel.xpath("//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table")
-            for row in table.xpath("./tbody/tr"):
-                item = {}
-                for td in row.xpath("./td"):
-                    if td.xpath("./a/text()").get():
-                        header = td.xpath('./@data-stat').get()
-                        if header in item:
-                            header += "_2"
-                        item[header] = td.xpath("./a/text()").get('').strip()
-                    else:
-                        header = td.xpath('./@data-stat').get()
-                        if header in item:
-                            header += "_2"
-                        item[header] = td.xpath("./text()").get('').strip()
-                items.append(item)
+            _items = self.get_data(self.bullpen_url)
+            items.extend(_items)
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while {self.get_bullpen.__name__} [{self.spider}]")
@@ -929,43 +941,135 @@ class FanGraph:
     def get_batting(self):
         items = []
         try:
-            self.driver.get_page(self.batting_url, wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table")
-            self.driver.page.wait_for_timeout(10*1000)
-            response = self.driver.page.content()
-            sel = Selector(response)
-            if sel.xpath("//button[@aria-label='close']"):
-                self.driver.click("//button[@aria-label='close']", wait_after=1*1000)
-            response = self.driver.page.content()
-            sel = Selector(response)
-            table = sel.xpath("//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table")
-            for row in table.xpath("./tbody/tr"):
-                item = {}
-                for td in row.xpath("./td"):
-                    if td.xpath("./a/text()").get():
-                        header = td.xpath('./@data-stat').get()
-                        if header in item:
-                            header += "_2"
-                        item[header] = td.xpath("./a/text()").get('').strip()
-                    else:
-                        header = td.xpath('./@data-stat').get()
-                        if header in item:
-                            header += "_2"
-                        item[header] = td.xpath("./text()").get('').strip()
-                items.append(item)
+            _items = self.get_data(self.batting_url)
+            items.extend(_items)
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while {self.get_batting.__name__} [{self.spider}]")
         finally:
             return items
+
+
+    def get_stuff(self):
+        items = []
+        try:
+            _items = self.get_data(self.stuff_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_stuff.__name__} [{self.spider}]")
+        finally:
+            return items
+    
+
+    def get_pitchers(self):
+        items = []
+        try:
+            _items = self.get_data(self.pitchers_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_pitchers.__name__} [{self.spider}]")
+        finally:
+            return items
+        
+
+    def get_rp(self):
+        items = []
+        try:
+            _items = self.get_data(self.rp_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_rp.__name__} [{self.spider}]")
+        finally:
+            return items
+    
+
+    def get_bat(self):
+        items = []
+        try:
+            _items = self.get_data(self.bat_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_bat.__name__} [{self.spider}]")
+        finally:
+            return items
+    
+
+    def get_lhp(self):
+        items = []
+        try:
+            _items = self.get_data(self.lhp_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_lhp.__name__} [{self.spider}]")
+        finally:
+            return items
         
     
+    def get_rhp(self):
+        items = []
+        try:
+            _items = self.get_data(self.rhp_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_rhp.__name__} [{self.spider}]")
+        finally:
+            return items
+        
+
+    def get_records(self):
+        items = []
+        try:
+            response = self.driver.get_page(self.records_url, wait_selector="//div[@id='content']//table")
+            sel = Selector(response)
+            tables = sel.xpath("//div[@id='content']//table")
+            for table in tables:
+                headers = [col.xpath("./div/text()").get() for col in table.xpath("./thead/tr[2]/th")]
+                for row in table.xpath("./tbody/tr"):
+                    item = {}
+                    for header, td in zip(headers, row.xpath("./td")):
+                        if td.xpath("./a/text()").get():
+                            if header in item:
+                                header += "_2"
+                            item[header] = td.xpath("./a/text()").get('').strip()
+                        else:
+                            if header in item:
+                                header += "_2"
+                            item[header] = td.xpath("./text()").get('').strip()
+                    items.append(item)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_records.__name__} [{self.spider}]")
+        finally:
+            return items
+        
+
     def crawl(self):
         datas = []
         logger.info(f"Crawling {self.spider}")
         bullpen = self.get_bullpen()
         batting = self.get_batting()
+        stuff = self.get_stuff()
+        pitchers = self.get_pitchers()
+        rp = self.get_rp()
+        bat = self.get_bat()
+        lhp = self.get_lhp()
+        rhp = self.get_rhp()
+        records = self.get_records()
         datas.append((bullpen, "Bullpen"))
         datas.append((batting, "Batting"))
+        datas.append((stuff, "Stuff"))
+        datas.append((pitchers, "Pitcher30"))
+        datas.append((rp, "RP30"))
+        datas.append((bat, "Bat30"))
+        datas.append((lhp, "TeamVLHP"))
+        datas.append((rhp, "TeamVRHP"))
+        datas.append((records, "Records"))
         for data, sheet in datas:
             self.exporter.export(data, sheet)
 
@@ -1577,7 +1681,7 @@ class Gsheet:
 ###########################
 
 
-driver = WebDriver(timeout=30*1000, headless=False) # headless=False to show the browser
+driver = WebDriver(timeout=30*1000, headless=True) # headless=False to show the browser
 exporter = FeedExporter(filename="mlb.xlsx")
 
 spiders = [
@@ -1585,7 +1689,7 @@ spiders = [
     # ActionNetwork(driver, exporter),
     # EvAnalytics(driver, exporter),
     # Dimers(driver, exporter),
-    # FanGraph(driver, exporter),
+    FanGraph(driver, exporter),
     # Dime(driver, exporter),
     # BetQl(driver, exporter),
     # SportsLine(driver, exporter),

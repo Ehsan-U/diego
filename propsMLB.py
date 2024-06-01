@@ -149,7 +149,7 @@ class FeedExporter:
 
     def export(self, data: List[Dict], sheet: str):
         if not data:
-            logger.info("No data available")
+            logger.info(f"No data available {sheet}")
             return
         try:
             df = self.to_numbers(pd.DataFrame(data))
