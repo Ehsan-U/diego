@@ -57,6 +57,22 @@ class WebDriver:
         route.abort()
 
 
+    def exists(self, selector: str, iframe: Frame = None):
+        count = 0
+        try:
+            if iframe is None:
+                count = self.page.locator(selector=selector).count()
+            else:
+                count = iframe.locator(selector=selector).count()
+        except Exception as e:
+            logger.debug(e)
+            logger.debug(f"Error while executing action {self.exists.__name__}")
+        else:
+            logger.debug(f"Action {self.exists.__name__} successfully executed")
+        finally:
+            return count > 0
+        
+
     def click(self, selector: str, timeout: int = None, wait_after: int = None, iframe: Frame = None):
         try:
             timeout = self.timeout if timeout is None else timeout
@@ -87,14 +103,14 @@ class WebDriver:
             logger.debug(f"Action {self.wait_for_selector.__name__} successfully executed")
 
 
-    def get_page(self, url: str, wait_selector: str = None, timeout: int = None, wait_timeout: int = 0, callback: callable = None, **kwargs) -> str:
+    def get_page(self, url: str, wait_selector: str = None, timeout: int = None, wait_after: int = 0, callback: callable = None, **kwargs) -> str:
         try:
             timeout = self.timeout if timeout is None else timeout
             self.page.goto(url, timeout=timeout)
             if wait_selector:
                 self.wait_for_selector(wait_selector, timeout)
-            if wait_timeout:
-                self.page.wait_for_timeout(wait_timeout)
+            if wait_after:
+                self.page.wait_for_timeout(wait_after)
             if callback is not None:
                 callback(**kwargs)
                 if wait_selector:
@@ -217,27 +233,27 @@ class FanGraph:
         lhh_page = self.driver.get_page(
             url=self.lhh_url,
             wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table",
-            wait_timeout=10000
+            wait_after=10000
         )
         rhh_page = self.driver.get_page(
             url=self.rhh_url,
             wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table",
-            wait_timeout=10000
+            wait_after=10000
         )
         lhp_page = self.driver.get_page(
             url=self.lhp_url,
             wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table",
-            wait_timeout=10000
+            wait_after=10000
         )
         rhp_page = self.driver.get_page(
             url=self.rhp_url,
             wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table",
-            wait_timeout=10000
+            wait_after=10000
         )
         last_7_page = self.driver.get_page(
             url=self.last_7_url,
             wait_selector="//div[contains(@class, 'leaders-major_leaders-major')]//div[@class='table-scroll']/table",
-            wait_timeout=10000
+            wait_after=10000
         )
         lhh_item = self.parse_stats_page(lhh_page)
         rhh_item = self.parse_stats_page(rhh_page)
@@ -265,7 +281,6 @@ class BallParker:
 
     def __init__(self, driver: WebDriver, exporter: FeedExporter) -> None:
         self.driver = driver
-        self.driver.page.route("**/*.csv", self.driver.csv_handler)
         self.exporter = exporter
         self.spider = self.__class__.__name__
 
@@ -282,7 +297,7 @@ class BallParker:
             return True
         except Exception as e: 
             logger.error(e)
-            logger.debug("error in login")
+            logger.debug(f"Error while {self.login.__name__} [{self.spider}]")
             return False
 
 
@@ -480,7 +495,7 @@ class PropsCash:
             return True
         except Exception as e:
             logger.error(e)
-            logger.debug("error in login")
+            logger.debug(f"Error while {self.login.__name__} [{self.spider}]")
             return False
 
 
@@ -551,7 +566,7 @@ class EvAnalystics:
     
     def login(self):
         try:
-            response = self.driver.get_page("https://evanalytics.com/login")
+            response = self.driver.get_page("https://evanalytics.com/login", wait_after=5*1000)
             sel = Selector(text=response)
             if sel.xpath("//form[@id='formy']"):
                 logger.info("Logging in")
@@ -564,7 +579,7 @@ class EvAnalystics:
             return True
         except Exception as e:
             logger.error(e)
-            logger.debug("Error while login")
+            logger.debug(f"Error while {self.login.__name__} [{self.spider}]")
             return False
     
 

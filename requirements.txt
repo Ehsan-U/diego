@@ -5,3 +5,6 @@ parsel
 cairosvg
 pillow
 twocaptcha
+dateparser
+oauth2client
+gspread
