@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.WARNING,
     ])
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # _date = input("Date: ") # 2024-05-24
 
@@ -151,15 +151,20 @@ class FeedExporter:
 
     def __init__(self, filename: str):
         mode = 'w' if not os.path.exists(filename) else 'a'
-        self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode, if_sheet_exists="replace")  if mode == "a" else pd.ExcelWriter(filename, engine="openpyxl", mode=mode)
+        self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode, if_sheet_exists="overlay")  if mode == "a" else pd.ExcelWriter(filename, engine="openpyxl", mode=mode)
 
     def export(self, data: List[Dict], sheet: str):
         if not data:
             logger.info(f"No data available {sheet}")
             return
         try:
+            # filtered_data = []
+            # for item in data:
+            #     if None in item.keys():
+            #         del item[None]
+            #     filtered_data.append(item)
             df = self.to_numbers(pd.DataFrame(data))
-            df.to_excel(self.writer, sheet_name=sheet, index=False)
+            df.to_excel(self.writer, startcol=1, sheet_name=sheet, index=False)
         except Exception as e:
             logger.error(e)
             logger.debug(f"Error while writing to {sheet}")
@@ -190,7 +195,7 @@ def is_exist(response, e):
 
 
 ##########################################
-_date = "2024-06-01"
+_date = "2024-06-02"
 
 
 class BallParker:
@@ -1681,23 +1686,23 @@ class Gsheet:
 ###########################
 
 
-driver = WebDriver(timeout=30*1000, headless=True) # headless=False to show the browser
-exporter = FeedExporter(filename="mlb.xlsx")
+driver = WebDriver(timeout=60*1000, headless=True) # headless=False to show the browser
+exporter = FeedExporter(filename="mlb_daily_slate.xlsx")
 
 spiders = [
-    # BallParker(driver, exporter),
-    # ActionNetwork(driver, exporter),
-    # EvAnalytics(driver, exporter),
-    # Dimers(driver, exporter),
+    BallParker(driver, exporter),
+    ActionNetwork(driver, exporter),
+    EvAnalytics(driver, exporter),
+    Dimers(driver, exporter),
     FanGraph(driver, exporter),
-    # Dime(driver, exporter),
-    # BetQl(driver, exporter),
-    # SportsLine(driver, exporter),
-    # PayDirt(driver, exporter),
-    # Rotoballer(driver, exporter),
-    # Gsheet(driver, exporter)
-
+    Dime(driver, exporter),
+    BetQl(driver, exporter),
+    SportsLine(driver, exporter),
+    PayDirt(driver, exporter),
+    Rotoballer(driver, exporter),
+    Gsheet(driver, exporter)
 ]
+
 try:
     for spider in spiders:
         spider.crawl()
