@@ -11,6 +11,7 @@ from parsel import Selector
 from playwright.sync_api import sync_playwright, Route, Frame
 from twocaptcha import TwoCaptcha
 import pandas as pd
+from openpyxl.worksheet.worksheet import Worksheet
 from typing import Dict, List
 import logging
 from PIL import Image
@@ -28,7 +29,7 @@ logging.basicConfig(level=logging.WARNING,
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# _date = input("Date: ") # 2024-05-24
+_date = input("Date: ") # 2024-05-24
 
 
 class WebDriver:
@@ -153,11 +154,19 @@ class FeedExporter:
         mode = 'w' if not os.path.exists(filename) else 'a'
         self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode, if_sheet_exists="overlay")  if mode == "a" else pd.ExcelWriter(filename, engine="openpyxl", mode=mode)
 
+    def clear_sheet(self, sheet):
+        worksheet: Worksheet = self.writer.sheets.get(sheet)
+        if worksheet:
+            for row in worksheet.iter_rows(min_col=2, min_row=2, max_col=worksheet.max_column):
+                for cell in row:
+                    cell.value = None
+
     def export(self, data: List[Dict], sheet: str):
         if not data:
             logger.info(f"No data available {sheet}")
             return
         try:
+            self.clear_sheet(sheet)
             # filtered_data = []
             # for item in data:
             #     if None in item.keys():
@@ -169,7 +178,7 @@ class FeedExporter:
             logger.error(e)
             logger.debug(f"Error while writing to {sheet}")
         else:
-            logger.debug(f"Data written to {sheet}")
+            logger.info(f"Data written to {sheet}")
 
     def to_numbers(self, df: pd.DataFrame):
         for col in df.columns:
@@ -195,7 +204,7 @@ def is_exist(response, e):
 
 
 ##########################################
-_date = "2024-06-02"
+# _date = "2024-06-02"
 
 
 class BallParker:
