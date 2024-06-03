@@ -154,11 +154,18 @@ class FeedExporter:
         mode = 'w' if not os.path.exists(filename) else 'a'
         self.writer = pd.ExcelWriter(filename, engine="openpyxl", mode=mode, if_sheet_exists="overlay")  if mode == "a" else pd.ExcelWriter(filename, engine="openpyxl", mode=mode)
 
-    def clear_sheet(self, sheet):
-        worksheet: Worksheet = self.writer.sheets.get(sheet)
+    def have_lookup(self, worksheet: Worksheet):
+        for row in worksheet.iter_rows(min_col=1, min_row=1, max_col=2):
+            for cell in row:
+                if '=vlookup' in str(cell.value).lower():
+                    return True
+        return False
+
+    def clear_sheet(self, worksheet: Worksheet, lookup_col: bool):
         if worksheet:
             cols = [col[0].value for col in worksheet.columns if (col[0].value != None and not 'https://' in str(col[0].value).lower())]
-            for row in worksheet.iter_rows(min_col=2, min_row=1, max_col=len(cols)):
+            min_col = 2 if lookup_col else 1
+            for row in worksheet.iter_rows(min_col=min_col, min_row=1, max_col=len(cols)):
                 for cell in row:
                     cell.value = None
 
@@ -167,16 +174,21 @@ class FeedExporter:
             logger.info(f"No data available {sheet}")
             return
         try:
+            worksheet: Worksheet = self.writer.sheets.get(sheet)
+            if worksheet:
+                lookup_col = self.have_lookup(worksheet)
+                self.clear_sheet(worksheet, lookup_col)
+            else:
+                lookup_col = False
             filtered_data = []
             for item in data:
                 if None in item.keys():
                     item.pop(None)
                 filtered_data.append(item)
-            self.clear_sheet(sheet)
             df = self.to_numbers(pd.DataFrame(filtered_data))
-            df.to_excel(self.writer, startcol=1, sheet_name=sheet, index=False)
+            df.to_excel(self.writer, startcol=1 if lookup_col else 0, sheet_name=sheet, index=False)
         except Exception as e:
-            logger.error(e)
+            logger.error(e, exc_info=True)
             logger.debug(f"Error while writing to {sheet}")
         else:
             logger.info(f"Data written to {sheet}")
