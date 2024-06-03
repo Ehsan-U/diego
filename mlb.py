@@ -157,7 +157,8 @@ class FeedExporter:
     def clear_sheet(self, sheet):
         worksheet: Worksheet = self.writer.sheets.get(sheet)
         if worksheet:
-            for row in worksheet.iter_rows(min_col=2, min_row=2, max_col=worksheet.max_column):
+            cols = [col[0].value for col in worksheet.columns if (col[0].value != None and not 'https://' in str(col[0].value).lower())]
+            for row in worksheet.iter_rows(min_col=2, min_row=1, max_col=len(cols)):
                 for cell in row:
                     cell.value = None
 
@@ -166,13 +167,13 @@ class FeedExporter:
             logger.info(f"No data available {sheet}")
             return
         try:
+            filtered_data = []
+            for item in data:
+                if None in item.keys():
+                    item.pop(None)
+                filtered_data.append(item)
             self.clear_sheet(sheet)
-            # filtered_data = []
-            # for item in data:
-            #     if None in item.keys():
-            #         del item[None]
-            #     filtered_data.append(item)
-            df = self.to_numbers(pd.DataFrame(data))
+            df = self.to_numbers(pd.DataFrame(filtered_data))
             df.to_excel(self.writer, startcol=1, sheet_name=sheet, index=False)
         except Exception as e:
             logger.error(e)
