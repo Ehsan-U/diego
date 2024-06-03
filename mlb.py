@@ -767,10 +767,10 @@ class EvAnalytics:
                     scraped_date = row.xpath("./td[3]/text()").get('')
                     if scraped_date in _date.replace("-",'/'):
                         item = {
+                            "Team": row.xpath("./td[6]/text()").get(),
                             "Time": row.xpath("./td[4]/text()").get(),
                             "Game": row.xpath("./td[5]/text()").get(),
                             "Date": row.xpath("./td[3]/text()").get(),
-                            "Team": row.xpath("./td[6]/text()").get(),
                             "OPP SP": row.xpath("./td[7]/text()").get(),
                             "Park": row.xpath("./td[8]/text()").get(),
                             "Ump": row.xpath("./td[9]/text()").get(),
