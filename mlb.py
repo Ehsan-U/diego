@@ -184,7 +184,8 @@ class FeedExporter:
             for item in data:
                 if None in item.keys():
                     item.pop(None)
-                filtered_data.append(item)
+                cleaned_item = {k: v.replace("%","").strip() if isinstance(v, str) else v for k,v in item.items()}
+                filtered_data.append(cleaned_item)
             df = self.to_numbers(pd.DataFrame(filtered_data))
             df.to_excel(self.writer, startcol=1 if lookup_col else 0, sheet_name=sheet, index=False)
         except Exception as e:
@@ -583,7 +584,7 @@ class ActionNetwork:
             for pick in sel.xpath("//h1[text()='Pending Picks']/parent::div/div/div[not(contains(@class, 'pick-card__header'))]"):
                 txt = " ".join(pick.xpath(".//div[@class='base-pick__pick-name']//text()").getall())
                 team1 = pick.xpath(".//div[@class='base-pick__details']/div/div[1]/text()").get()
-                team2 = pick.xpath(".//div[@class='base-pick__details']/div/div[2]/text()").get()
+                team2 = pick.xpath(".//div[@class='base-pick__details']/div/div[2]/text()").get() or pick.xpath(".//div[@class='base-pick__details']/div/div[3]/text()").get()
                 if 'under' in txt.lower():
                     item = {
                         "Expert": author + " O",
@@ -596,6 +597,8 @@ class ActionNetwork:
                         "Team": team1,
                         "Pick": txt.replace("Over", "O"),
                     }
+                elif "." in txt.lower():
+                    continue
                 else:
                     item = {
                         "Expert": author + " ML",
