@@ -619,7 +619,7 @@ class EvAnalystics:
             self.driver.click("//div[contains(text(), 'TEAM')]/button[@data-val='*ALL' and @class='group-button']", wait_after=5*1000)
             responses = [self.driver.page.content()]
             start_page = 1
-            end_page = int(re.findall("\d", self.driver.page.locator("//span", has_text="Total records").inner_text().split("(")[0])[-1])
+            end_page = int(re.findall(r"\d", self.driver.page.locator("//span", has_text="Total records").inner_text().split("(")[0])[-1])
             while start_page < end_page:
                 start_page +=1
                 self.driver.click("//button[@id='nextButton']", wait_after=2*1000)

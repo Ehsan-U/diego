@@ -6,6 +6,7 @@ import re
 import shutil
 from urllib.parse import urljoin
 import dateparser
+import numpy as np
 import requests
 from parsel import Selector
 from playwright.sync_api import sync_playwright, Route, Frame
@@ -195,6 +196,7 @@ class FeedExporter:
             logger.info(f"Data written to {sheet}")
 
     def to_numbers(self, df: pd.DataFrame):
+        df.replace('N/A', np.nan, inplace=True)
         for col in df.columns:
             try:
                 df[col] = df[col].astype(float)
@@ -1252,7 +1254,7 @@ class BetQl:
             self.driver.page.get_by_role("button", name="Log In").click()
             self.driver.page.wait_for_timeout(1000)
             self.driver.page.get_by_placeholder("Enter e-mail address").fill("diego.lomanto@gmail.com")
-            self.driver.page.get_by_placeholder("Enter password").fill("7!W?\\05o`v92")
+            self.driver.page.get_by_placeholder("Enter password").fill(r"7!W?\\05o`v92")
             self.driver.page.wait_for_timeout(1000)
             self.driver.click("//form[@class='rotoql-login__form']//button[text()='Log In']")
             self.driver.wait_for_selector("//form[@class='rotoql-login__form']//button[text()='Log In']", state="hidden")
@@ -1306,10 +1308,10 @@ class BetQl:
                         offense_grade = sel.xpath("//div[@class='best-bets__main']/div[3]/div/div[contains(@class, 'projections-list')]/div[8]/span[1]/span/text()").get()
                         pitching_grade = sel.xpath("//div[@class='best-bets__main']/div[3]/div/div[contains(@class, 'projections-list')]/div[9]/span[1]/span/text()").get()
                         
-                        moneyline_percent_of_money = sel.xpath("(//div[@class='sharp-report__drawer-text '])[1]/text()").re_first("\d+%")
-                        moneyline_percent_of_ticket = sel.xpath("(//div[@class='sharp-report__drawer-text '])[2]/text()").re_first("\d+%")
-                        total_percent_of_money = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[1]/text()").re_first("\d+%")
-                        total_percent_of_ticket = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[2]/text()").re_first("\d+%")
+                        moneyline_percent_of_money = sel.xpath("(//div[@class='sharp-report__drawer-text '])[1]/text()").re_first(r"\d+%")
+                        moneyline_percent_of_ticket = sel.xpath("(//div[@class='sharp-report__drawer-text '])[2]/text()").re_first(r"\d+%")
+                        total_percent_of_money = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[1]/text()").re_first(r"\d+%")
+                        total_percent_of_ticket = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[2]/text()").re_first(r"\d+%")
 
 
                     elif i == 2:
@@ -1323,10 +1325,10 @@ class BetQl:
                         offense_grade = sel.xpath("//div[@class='best-bets__main']/div[3]/div/div[contains(@class, 'projections-list')]/div[8]/span[3]/span/text()").get()
                         pitching_grade = sel.xpath("//div[@class='best-bets__main']/div[3]/div/div[contains(@class, 'projections-list')]/div[9]/span[3]/span/text()").get()
                         
-                        moneyline_percent_of_money = sel.xpath("(//div[@class='sharp-report__drawer-text '])[3]/text()").re_first("\d+%")
-                        moneyline_percent_of_ticket = sel.xpath("(//div[@class='sharp-report__drawer-text '])[4]/text()").re_first("\d+%")
-                        total_percent_of_money = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[3]/text()").re_first("\d+%")
-                        total_percent_of_ticket = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[4]/text()").re_first("\d+%")
+                        moneyline_percent_of_money = sel.xpath("(//div[@class='sharp-report__drawer-text '])[3]/text()").re_first(r"\d+%")
+                        moneyline_percent_of_ticket = sel.xpath("(//div[@class='sharp-report__drawer-text '])[4]/text()").re_first(r"\d+%")
+                        total_percent_of_money = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[3]/text()").re_first(r"\d+%")
+                        total_percent_of_ticket = total_sel.xpath("(//div[@class='sharp-report__drawer-text '])[4]/text()").re_first(r"\d+%")
                     item = {
                         "Team": team,
                         "Proj Full Score": proj_full_score,
@@ -1427,8 +1429,8 @@ class SportsLine:
             parsed_date = datetime.datetime.strptime(scraped_date, "%b %d %Y").strftime('%m/%d') if scraped_date else ''
             if f"{that_day}" in parsed_date:
                 break
-            team = expert.xpath(".//a[contains(@data-tracking-value,'market-type-moneyline') or contains(@data-tracking-value,'market-type-spread') or contains(@data-tracking-value,'market-type-total')]//span[contains(text(), 'Money') or contains(text(), 'Spread') or contains(text(), 'Over')]/following-sibling::span/text()").re_first("[a-zA-z\s\.]+")
-            pick = expert.xpath(".//a[contains(@data-tracking-value,'market-type-moneyline') or contains(@data-tracking-value,'market-type-spread') or contains(@data-tracking-value,'market-type-total')]//span[contains(text(), 'Money') or contains(text(), 'Spread') or contains(text(), 'Over')]/following-sibling::span/text()").re_first("[-\+\d]+")
+            team = expert.xpath(".//a[contains(@data-tracking-value,'market-type-moneyline') or contains(@data-tracking-value,'market-type-spread') or contains(@data-tracking-value,'market-type-total')]//span[contains(text(), 'Money') or contains(text(), 'Spread') or contains(text(), 'Over')]/following-sibling::span/text()").re_first(r"[a-zA-z\s\.]+")
+            pick = expert.xpath(".//a[contains(@data-tracking-value,'market-type-moneyline') or contains(@data-tracking-value,'market-type-spread') or contains(@data-tracking-value,'market-type-total')]//span[contains(text(), 'Money') or contains(text(), 'Spread') or contains(text(), 'Over')]/following-sibling::span/text()").re_first(r"[-\+\d]+")
             analysis = "".join(expert.xpath(".//span[contains(text(), 'Analysis')]/following-sibling::p/text()").getall()).replace("ANALYSIS:",'').strip()
             expert_name = expert.xpath(".//a[@data-tracking-value='expert-picks_click_profile-avatar']//span[@color]/text()").get('')
             if f"{this_day}" in parsed_date and pick:
