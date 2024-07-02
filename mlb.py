@@ -924,7 +924,10 @@ class FanGraph:
     lhp_url = 'https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=y&season=2024&season1=2024&ind=0&team=0%2Cts&type=8&month=13&pageitems=2000000000'
     rhp_url = "https://www.fangraphs.com/leaders/major-league?pos=all&stats=bat&lg=all&qual=y&season=2024&season1=2024&ind=0&team=0%2Cts&type=8&month=14&pageitems=2000000000"
     records_url = "https://www.fangraphs.com/depthcharts.aspx?position=BaseRuns&pageitems=2000000000"
-
+    sphome_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&team=0&sortcol=7&sortdir=default&pageitems=2000000000&stats=pit&type=8&month=15&qual=1&pagenum=1"
+    spaway_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&team=0&sortcol=7&sortdir=default&pageitems=2000000000&stats=pit&qual=1&type=8&month=16"
+    bat_h_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&qual=0&stats=bat&team=0%2Cts&type=8&month=15&pageitems=2000000000"
+    bat_a_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&qual=0&stats=bat&team=0%2Cts&type=8&month=15&pageitems=2000000000"
 
     def __init__(self, driver: WebDriver, exporter: FeedExporter) -> None:
         self.driver = driver
@@ -1079,6 +1082,54 @@ class FanGraph:
             logger.debug(f"Error while {self.get_records.__name__} [{self.spider}]")
         finally:
             return items
+    
+
+    def get_sphome(self):
+        items = []
+        try:
+            _items = self.get_data(self.sphome_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_sphome.__name__} [{self.spider}]")
+        finally:
+            return items
+        
+
+    def get_spaway(self):
+        items = []
+        try:
+            _items = self.get_data(self.spaway_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_spaway.__name__} [{self.spider}]")
+        finally:
+            return items
+
+
+    def get_bat_h(self):
+        items = []
+        try:
+            _items = self.get_data(self.bat_h_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_bat_h.__name__} [{self.spider}]")
+        finally:
+            return items
+    
+
+    def get_bat_a(self):
+        items = []
+        try:
+            _items = self.get_data(self.bat_a_url)
+            items.extend(_items)
+        except Exception as e:
+            logger.error(e)
+            logger.debug(f"Error while {self.get_bat_a.__name__} [{self.spider}]")
+        finally:
+            return items
         
 
     def crawl(self):
@@ -1093,6 +1144,10 @@ class FanGraph:
         lhp = self.get_lhp()
         rhp = self.get_rhp()
         records = self.get_records()
+        sphome = self.get_sphome()
+        spaway = self.get_spaway()
+        bat_h = self.get_bat_h()
+        bat_a = self.get_bat_a()
         datas.append((bullpen, "Bullpen"))
         datas.append((batting, "Batting"))
         datas.append((stuff, "Stuff"))
@@ -1102,6 +1157,10 @@ class FanGraph:
         datas.append((lhp, "TeamVLHP"))
         datas.append((rhp, "TeamVRHP"))
         datas.append((records, "Records"))
+        datas.append((sphome, "SPHome"))
+        datas.append((spaway, "SPAway"))
+        datas.append((bat_h, "Bat H"))
+        datas.append((bat_a, "Bat A"))
         for data, sheet in datas:
             self.exporter.export(data, sheet)
 
