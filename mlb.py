@@ -928,8 +928,8 @@ class FanGraph:
     records_url = "https://www.fangraphs.com/depthcharts.aspx?position=BaseRuns&pageitems=2000000000"
     sphome_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&team=0&sortcol=7&sortdir=default&pageitems=2000000000&stats=pit&type=8&month=15&qual=1&pagenum=1"
     spaway_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&team=0&sortcol=7&sortdir=default&pageitems=2000000000&stats=pit&qual=1&type=8&month=16"
-    bat_h_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&qual=0&stats=bat&team=0%2Cts&type=8&month=15&pageitems=2000000000"
-    bat_a_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&qual=0&stats=bat&team=0%2Cts&type=8&month=15&pageitems=2000000000"
+    bat_h_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&qual=0&stats=bat&team=0%2Cts&type=8&month=15&sortcol=17&sortdir=default&pagenum=1&pageitems=2000000000"
+    bat_a_url = "https://www.fangraphs.com/leaders/major-league?pos=all&lg=all&season=2024&season1=2024&ind=0&qual=0&stats=bat&team=0%2Cts&type=8&month=16&sortcol=17&sortdir=default&pagenum=1&pageitems=2000000000"
 
     def __init__(self, driver: WebDriver, exporter: FeedExporter) -> None:
         self.driver = driver
