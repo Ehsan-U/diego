@@ -474,6 +474,8 @@ class ActionNetwork:
     def get_f5(self):
         items = []
         try:
+            self.driver.page.locator("//div[@data-testid='odds-tools-sub-nav__odds-type']/select").select_option(value="total")
+            self.driver.page.wait_for_timeout(5000)
             self.driver.page.locator("//div[@data-testid='odds-tools__dropdown']/select").select_option(value="firstfiveinnings")
             self.driver.page.wait_for_timeout(5000)
             self.scroll_into_view("//div[@class='best-odds__table-container']")
