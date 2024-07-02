@@ -484,13 +484,11 @@ class ActionNetwork:
             for row in sel.xpath("//table/tbody/tr[position() mod 2 = 1]"):
                 items.append({
                     "Team": row.xpath("./td[1]//div[@class='game-info__teams'][1]//div[@class='game-info__team--desktop']/span/text()").get(),
-                    "Best Odds": row.xpath("./td[3]/div/div[1]/div/span[2]/text()").get(),
-                    "Book": row.xpath("./td[3]/div/div[1]/div/span[3]//img/@alt").get()
+                    "Best Odds": row.xpath("./td[3]/div/div[1]/div/span[1]/text()").get(),
                 })
                 items.append({
                     "Team": row.xpath("./td[1]//div[@class='game-info__teams'][2]//div[@class='game-info__team--desktop']/span/text()").get(),
-                    "Best Odds": row.xpath("./td[3]/div/div[2]/div/span[2]/text()").get(),
-                    "Book": row.xpath("./td[3]/div/div[2]/div/span[3]//img/@alt").get()
+                    "Best Odds": row.xpath("./td[3]/div/div[2]/div/span[1]/text()").get(),
                 })
         except Exception as e:
             logger.error(e)
